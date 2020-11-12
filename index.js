@@ -6,7 +6,7 @@ const Sessions = require("./sessions");
 require('dotenv').config();
 
 const app = express();
-const HOST = 'zapzap-api.herokuapp.com'; //'0.0.0.0';
+const HOST = process.env.HOSTNAME; //'0.0.0.0';
 
 app.use(cors());
 app.use(express.json());
