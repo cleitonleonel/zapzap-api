@@ -6,7 +6,8 @@ const Sessions = require("./sessions");
 require('dotenv').config();
 
 const app = express();
-const HOST = process.env.HOSTNAME;
+const HOST = process.env.HOST || 'localhost';
+const PORT = process.env.PORT || 5000
 
 app.use(cors());
 app.use(express.json());
@@ -17,11 +18,11 @@ if (process.env.HTTPS === 1) { //with ssl
             key: fs.readFileSync(process.env.SSL_KEY_PATH),
             cert: fs.readFileSync(process.env.SSL_CERT_PATH)
         },
-        app).listen(process.env.HOST_PORT || 3000);
-    console.log("Https server running on port " + process.env.HOST_PORT);
+        app).listen(PORT, HOST);
+    console.log("Https server running on port " + 'https://' + HOST + ':' + PORT);
 } else { //http
-    app.listen(process.env.HOST_PORT || 3000,() => {
-        console.log("Http server running on port " + process.env.HOST_PORT);
+    app.listen(PORT, HOST,() => {
+        console.log("Http server running on port " + 'http://' + HOST + ':' + PORT);
     });
 }//http
 
