@@ -6,7 +6,7 @@ const Sessions = require("./sessions");
 require('dotenv').config();
 
 const app = express();
-const HOST = '0.0.0.0';
+const HOST = 'localhost'; //'0.0.0.0';
 
 app.use(cors());
 app.use(express.json());
