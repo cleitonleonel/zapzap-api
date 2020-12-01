@@ -44,14 +44,14 @@ app.get("/qrcode", async (req, res, next) => {
     if (session !== false) {
         if (session.status !== 'isLogged') {
             if (req.query.image) {
-                session.qrcode = session.qrcode.replace('data:image/png;base64,', '');
-                const imageBuffer = Buffer.from(session.qrcode, 'base64');
+                //session.qrcode = session.qrcode.replace('data:image/png;base64,', '');
+                //const imageBuffer = Buffer.from(session.qrcode, 'base64');
 
                 const html = '<html><head><meta name="viewport" content="width=device-width,' +
                   ' minimum-scale=0.1"><title>qrcode (264×264)</title></head>' +
                   '<body style="margin: 0px;background: #ffffff;text-align-last: center; overflow: hidden;">' +
                   '<img style="-webkit-user-select: none;margin: auto;cursor: zoom-in;padding: 200px;' +
-                  'width: 300px;height: 300px;" src="data:image/png;base64,'+ session.qrcode +'" width="150"' +
+                  'width: 300px;height: 300px;" src="'+ session.qrcode +'" width="150"' +
                   ' height="150"></body></html>';
 
                 res.writeHead(200, {
