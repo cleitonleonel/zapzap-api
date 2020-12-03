@@ -31,10 +31,12 @@ app.get("/start", async (req, res, next) => {
     const session = await Sessions.start(req.query.sessionName);
 
     if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
-        res.status(200).json({ result: 'success', message: session.state });
+        //res.status(200).json({ result: 'success', message: session.state });
+        res.redirect("../qrcode?sessionName=" + req.query.sessionName + '&image=true')
     } else {
         res.status(200).json({ result: 'error', message: session.state });
     }
+    return res.end();
 });//start
 
 app.get("/qrcode", async (req, res, next) => {

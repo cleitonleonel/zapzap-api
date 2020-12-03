@@ -183,10 +183,10 @@ module.exports = class Sessions {
             if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)) {
                 //restart session
                 await Sessions.closeSession(sessionName);
-                Sessions.start(sessionName);
+                await Sessions.start(sessionName);
                 return { result: "error", message: session.state };
             } else if (["CLOSED"].includes(session.state)) {
-                Sessions.start(sessionName);
+                await Sessions.start(sessionName);
                 return { result: "error", message: session.state };
             } else { //CONNECTED
                 if (session.status !== 'isLogged') {
@@ -210,7 +210,7 @@ module.exports = class Sessions {
             is_connected(session);
 
             if (session.state === "CONNECTED") {
-                var resultSendText = await session.client.then(async client => {
+                let resultSendText = await session.client.then(async client => {
                     return await client.sendText(number + '@c.us', text);
                 });
                 return { result: "success" }
