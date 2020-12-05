@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+
+  <meta charset="UTF-8">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="Yinka Enoch Adedokun">
+	<title>Registre-se</title>
+
+	<link rel="apple-touch-icon" type="image/png" href="" />
+	<meta name="apple-mobile-web-app-title" content="ZapZap-api">
+	<link rel="shortcut icon" type="image/x-icon" href="" />
+	<link rel="mask-icon" type="" href="" color="#111" />
+	<title>ZapZap-api</title>
+	<link rel='stylesheet' href='/css/font-awesome.min.css'>
+	<link rel='stylesheet' href='/css/bootstrap.min.css'>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<style>
+.main-content{
+	width: 50%;
+	border-radius: 20px;
+	box-shadow: 0 5px 5px rgba(0,0,0,.4);
+	margin: 5em auto;
+	display: flex;
+}
+.company__info{
+	background-color: #008080;
+	border-top-left-radius: 20px;
+	border-bottom-left-radius: 20px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	color: #fff;
+}
+.fa-android{
+	font-size:3em;
+}
+@media screen and (max-width: 640px) {
+	.main-content{width: 90%;}
+	.company__info{
+		display: none;
+	}
+	.login_form{
+		border-top-left-radius:20px;
+		border-bottom-left-radius:20px;
+	}
+}
+@media screen and (min-width: 642px) and (max-width:800px){
+	.main-content{width: 70%;}
+}
+.row > h2{
+	color:#008080;
+}
+.login_form{
+	background-color: #fff;
+	border-top-right-radius:20px;
+	border-bottom-right-radius:20px;
+	border-top:1px solid #ccc;
+	border-right:1px solid #ccc;
+}
+form{
+	padding: 0 2em;
+}
+.form__input{
+	width: 100%;
+	border:0px solid transparent;
+	border-radius: 0;
+	border-bottom: 1px solid #aaa;
+	padding: 1em .5em .5em;
+	padding-left: 2em;
+	outline:none;
+	margin:1.5em auto;
+	transition: all .5s ease;
+}
+.form__input:focus{
+	border-bottom-color: #008080;
+	box-shadow: 0 0 5px rgba(0,80,80,.4);
+	border-radius: 4px;
+}
+.btn{
+	transition: all .5s ease;
+	width: 70%;
+	border-radius: 30px;
+	color:#008080;
+	font-weight: 600;
+	background-color: #fff;
+	border: 1px solid #008080;
+	margin-top: 1.5em;
+	margin-bottom: 1em;
+}
+.btn:hover, .btn:focus{
+	background-color: #008080;
+	color:#fff;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+
+
+  <script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+
+
+</head>
+
+<body>
+	<!-- Main Content -->
+	<div class="container-fluid">
+		<div class="row main-content bg-success text-center">
+			<div class="col-md-4 text-center company__info">
+				<span class="company__logo"><img style="width: 100%;" src="/media/zapzap-api.png" alt=""></span>
+			</div>
+			<div class="col-md-8 col-xs-12 col-sm-12 login_form ">
+				<div class="container-fluid">
+					<div class="row">
+						<h2>Cadastre-se</h2>
+					</div>
+					<div class="row">
+						<form control="" class="form-group" id="user_form">
+							<div class="row">
+								<label for="username"></label><input type="text" name="username" id="username" class="form__input" placeholder="Usuário">
+							</div>
+							<div class="row">
+								<label for="password"></label><input type="password" name="password" id="password" class="form__input" placeholder="Senha">
+							</div>
+							<div class="row">
+								<label for="email"></label><input type="text" name="email" id="email" class="form__input" placeholder="E-mail">
+							</div>
+							<div class="row">
+								<input onclick="register()" value="Enviar" class="btn">
+							</div>
+						</form>
+					</div>
+					<div class="row">
+						<p>Já tem uma conta? <a href="/">Clique aqui!</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Footer -->
+	<div class="container-fluid text-center footer">
+		<p>Criado com &hearts; por <a href="https://github.com/cleitonleonel">Cleiton Leonel Creton</a></p>
+	</div>
+</body>
+<script>
+	function register(event) {
+		$.ajaxSettings.traditional = true;
+
+		let payload = {
+				username: $('#username').val(),
+				email: $('#email').val(),
+				password: $('#password').val(),
+				//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+		}
+
+		$.ajax({
+			type: 'post',
+			url: '/api/user/save/',
+			contentType: "application/json; charset=utf-8",
+			data: JSON.stringify(payload),
+		success: function(response) {
+			alert('Bem vindo ' + $('#username').val() +", sua conta foi criada com sucesso!!!");
+			window.location = '/login';
+		},
+    error: function(XMLHttpRequest, textStatus, errorThrown) {
+        alert("Error: " + errorThrown);
+    }
+		});
+	}
+</script>
+</html>
