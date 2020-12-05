@@ -1,122 +1,80 @@
 const fs = require('fs');
 const https = require('https');
 const express = require("express");
-const cors = require('cors');
 const Sessions = require("./sessions");
+const routes = require('./routes');
+const cors = require('cors');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
+
 const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.PORT || 5000
 
+app.use(express.static('static'));
 app.use(cors());
 app.use(express.json());
 
-if (process.env.HTTPS === 1) { //with ssl
-    https.createServer(
-        {
-            key: fs.readFileSync(process.env.SSL_KEY_PATH),
-            cert: fs.readFileSync(process.env.SSL_CERT_PATH)
-        },
-        app).listen(PORT, HOST);
-    console.log("Https server running on port " + 'https://' + HOST + ':' + PORT);
-} else { //http
-    app.listen(PORT, HOST,() => {
-        console.log("Http server running on port " + 'http://' + HOST + ':' + PORT);
-    });
-}//http
+app.use(cookieParser());
 
-app.get("/start", async (req, res, next) => {
-    console.log("starting..." + req.query.sessionName);
-    const session = await Sessions.start(req.query.sessionName);
+app.use(session({
+  key: 'user_sid',
+  secret: 'somerandonstuffs',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    expires: 600000
+  }
+}));
 
-    if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
-        //res.status(200).json({ result: 'success', message: session.state });
-        res.redirect("../qrcode?sessionName=" + req.query.sessionName + '&image=true')
-    } else {
-        res.status(200).json({ result: 'error', message: session.state });
-    }
-    return res.end();
-});//start
+app.use((req, res, next) => {
+  if (req.cookies.user_sid && !req.session.user) {
+    res.clearCookie('user_sid');
+  }
+  next();
+});
 
-app.get("/qrcode", async (req, res, next) => {
-    console.log("qrcode..." + req.query.sessionName);
-    const session = Sessions.getSession(req.query.sessionName);
+const sessionChecker = (req, res, next) => {
+  if (req.session.user && req.cookies.user_sid) {
+      res.redirect('/login');
+  } else {
+    next();
+  }
+};
 
-    if (session !== false) {
-        if (session.status !== 'isLogged') {
-            if (req.query.image) {
-                //session.qrcode = session.qrcode.replace('data:image/png;base64,', '');
-                //const imageBuffer = Buffer.from(session.qrcode, 'base64');
+app.get('/', sessionChecker, (req, res) => {
+  res.redirect('/login');
+});
 
-                const html = '<html><head><meta name="viewport" content="width=device-width,' +
-                  ' minimum-scale=0.1"><title>qrcode (264×264)</title></head>' +
-                  '<body style="margin: 0px;background: #ffffff;text-align-last: center; overflow: hidden;">' +
-                  '<img style="-webkit-user-select: none;margin: auto;cursor: zoom-in;padding: 200px;' +
-                  'width: 300px;height: 300px;" src="'+ session.qrcode +'" width="150"' +
-                  ' height="150"></body></html>';
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname+'/templates/index.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname+'/templates/register.html')));
 
-                res.writeHead(200, {
-                    //'Content-Type': 'image/png',
-                    //'Content-Length': imageBuffer.length
-                });
-                //res.end(imageBuffer);
-                res.end(html);
-                console.log('Terminal qrcode: \n', session.ascii_qr);
-            } else {
-                res.status(200).json({ result: "success", message: session.state, qrcode: session.qrcode });
-            }
-        } else {
-            res.status(200).json({ result: "error", message: session.state });
-        }
-    } else {
-        res.status(200).json({ result: "error", message: "NOTFOUND" });
-    }
-});//qrcode
+app.use('/api', routes);
 
-app.post("/sendText", async function sendText(req, res, next) {
-    const result = await Sessions.sendText(
-      req.body.sessionName,
-      req.body.number,
-      req.body.text
-    );
-    //console.log(req.body);
-    res.json(result);
-});//sendText
+if (process.env.HTTPS === 1) {
+  https.createServer(
+    {
+      key: fs.readFileSync(process.env.SSL_KEY_PATH),
+      cert: fs.readFileSync(process.env.SSL_CERT_PATH)
+    },
+    app).listen(PORT, HOST);
+  console.log("Https server running on port " + 'https://' + HOST + ':' + PORT);
+} else {
+  app.listen(PORT, HOST,() => {
+    console.log("Http server running on port " + 'http://' + HOST + ':' + PORT);
+  });
+}
 
-app.get("/sendText", async (req, res, next) => {
-    const result = await Sessions.sendText(
-      req.query.sessionName,
-      req.query.number,
-      req.query.text
-    );
-    //console.log(req.query);
-    res.json(result);
-});//sendText
-
-app.post("/sendFile", async (req, res, next) => {
-    const result = await Sessions.sendFile(
-      req.body.sessionName,
-      req.body.number,
-      req.body.base64Data,
-      req.body.fileName,
-      req.body.caption
-    );
-    res.json(result);
-});//sendFile
-
-app.get("/close", async (req, res, next) => {
-    const result = await Sessions.closeSession(req.query.sessionName);
-    res.json(result);
-});//close
-
-process.stdin.resume();//so the program will not close instantly
+process.stdin.resume();
 
 async function exitHandler(options, exitCode) {
     if (options.cleanup) {
         console.log('cleanup');
-        await Sessions.getSessions().forEach(async session => {
-            await Sessions.closeSession(session.sessionName);
+        await Sessions.getSessions().forEach(session => {
+            Sessions.closeSession(session.sessionName);
         });
     }
     if (exitCode || exitCode === 0) {
@@ -126,13 +84,12 @@ async function exitHandler(options, exitCode) {
     if (options.exit) {
         process.exit();
     }
-} //exitHandler 
-//do something when app is closing
+}
+
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
-//catches ctrl+c event
 process.on('SIGINT', exitHandler.bind(null, { exit: true }));
-// catches "kill pid" (for example: nodemon restart)
 process.on('SIGUSR1', exitHandler.bind(null, { exit: true }));
 process.on('SIGUSR2', exitHandler.bind(null, { exit: true }));
-//catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
+
+module.exports = app;
