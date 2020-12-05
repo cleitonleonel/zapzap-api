@@ -5,7 +5,7 @@ const Sessions = require("./sessions");
 const routes = require('./routes');
 const cors = require('cors');
 const path = require('path');
-const cookieParser = require('cookie-parser');
+//const cookieParser = require('cookie-parser');
 const session = require('express-session');
 require('dotenv').config();
 
@@ -18,7 +18,7 @@ app.use(express.static('static'));
 app.use(cors());
 app.use(express.json());
 
-app.use(cookieParser());
+//app.use(cookieParser());
 
 app.use(session({
   key: 'user_sid',
@@ -30,12 +30,16 @@ app.use(session({
   }
 }));
 
+/*
+
 app.use((req, res, next) => {
   if (req.cookies.user_sid && !req.session.user) {
     res.clearCookie('user_sid');
   }
   next();
 });
+
+ */
 
 const sessionChecker = (req, res, next) => {
   if (req.session.user && req.cookies.user_sid) {
