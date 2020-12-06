@@ -17,6 +17,7 @@
 	<link rel='stylesheet' href='/css/font-awesome.min.css'>
 	<link rel='stylesheet' href='/css/bootstrap.min.css'>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="/controllers/notify.js"></script>
 
 <style>
 .main-content{
@@ -114,6 +115,7 @@ form{
 
 <body>
 	<!-- Main Content -->
+  <div id="notifications"></div>
 	<div class="container-fluid">
 		<div class="row main-content bg-success text-center">
 			<div class="col-md-4 text-center company__info">
@@ -153,29 +155,42 @@ form{
 	</div>
 </body>
 <script>
-	function register(event) {
+	function register() {
 		$.ajaxSettings.traditional = true;
 
-		let payload = {
-				username: $('#username').val(),
-				email: $('#email').val(),
-				password: $('#password').val(),
-				//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
-		}
+    let username = $('#username').val();
+    let password = $('#password').val();
+    let email = $('#email').val();
 
-		$.ajax({
-			type: 'post',
-			url: '/api/user/save/',
-			contentType: "application/json; charset=utf-8",
-			data: JSON.stringify(payload),
-		success: function(response) {
-			alert('Bem vindo ' + $('#username').val() +", sua conta foi criada com sucesso!!!");
-			window.location = '/login';
-		},
-    error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert("Error: " + errorThrown);
+		if (username !== "" && password !== "" && email !== "") {
+			let payload = {
+				username: username,
+				email: email,
+				password: password,
+				//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+			}
+
+			$.ajax({
+				type: 'post',
+				url: '/api/user/save/',
+				contentType: "application/json; charset=utf-8",
+				data: JSON.stringify(payload),
+				success: function (response) {
+					let message = 'Bem vindo ' + $('#username').val() + ", sua conta foi criada com sucesso!!!";
+					notification(message, null, null, 'success');
+					window.location = '/login';
+				},
+				error: function (XMLHttpRequest, textStatus, errorThrown) {
+					notification(errorThrown, null, null, 'danger');
+				}
+			});
+		} else {
+		  document.getElementById("username").focus();
     }
-		});
 	}
+
+  function notification(text, callback, close_callback, style){
+    Notify(text, callback, close_callback, style);
+  }
 </script>
 </html>

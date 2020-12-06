@@ -106,12 +106,13 @@ router.get("/qrcode", async (req, res, next) => {
         //session.qrcode = session.qrcode.replace('data:image/png;base64,', '');
         //const imageBuffer = Buffer.from(session.qrcode, 'base64');
 
-        const html = '<html><head><meta name="viewport" content="width=device-width,' +
+        const html = '<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,' +
           ' minimum-scale=0.1"><title>qrcode (264×264)</title>\t<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>\n</head>' +
-          '<body style="margin: 0px;background: #ffffff;text-align-last: center; overflow: hidden;">' +
-          '<img style="-webkit-user-select: none;margin: auto;cursor: zoom-in;padding: 200px;' +
+          '<body style="margin: 0;background: #ffffff;text-align-last: center; overflow: hidden;">' +
+          '<div style="padding-top: 10px;"><span style="text-align: center"><h1>Aponte a câmera do seu dispositivo e <br> leia o Qrcode que irá aparecer abaixo</h1></span></div>'+
+          '<img style="-webkit-user-select: none;margin: auto;cursor: zoom-in;padding: 20px;' +
           'width: 300px;height: 300px;" src="'+ session.qrcode +'" width="150"' +
-          ' height="150"></body><script>\t$(document).ready(function () {\n' +
+          ' height="150" alt=""></body><script>\t$(document).ready(function () {\n' +
           '\t\tsetTimeout(function () {\n' +
           '\t\t\twindow.location.reload(1);\n' +
           '\t\t}, 10000);\n' +
@@ -122,8 +123,15 @@ router.get("/qrcode", async (req, res, next) => {
           //'Content-Length': imageBuffer.length
         //});
         //res.end(imageBuffer);
+
+        if (session.state === 'CONNECTED' || session.status === 'inChat' || session.status === 'qrReadSuccess'){
+          res.redirect('/testing');
+        }
+
         res.end(html);
+
         console.log('Terminal qrcode: \n', session.ascii_qr);
+
       } else {
         res.status(200).json({ result: "success", message: session.state, qrcode: session.qrcode });
       }
@@ -152,7 +160,6 @@ router.get("/sendText", async (req, res, next) => {
     req.query.number,
     req.query.text
   );
-  //console.log(req.query);
   res.json(result);
 });
 

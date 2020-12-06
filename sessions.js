@@ -1,25 +1,25 @@
-// person.js
 'use strict';
 
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const venom = require('venom-bot');
-const { json } = require('express');
-const { Session } = require('inspector');
+//const { json } = require('express');
+//const { Session } = require('inspector');
 const sleep = require('system-sleep');
+const app = require("./index");
 
 module.exports = class Sessions {
 
     static async start(sessionName) {
-        Sessions.sessions = Sessions.sessions || []; //start array
+        Sessions.sessions = Sessions.sessions || [];
 
         let session = Sessions.getSession(sessionName);
 
-        if (session === false) { //create new session
+        if (session === false) {
             console.log("session == false");
             session = await Sessions.addSesssion(sessionName);
-        } else if (["CLOSED"].includes(session.state)) { //restart session
+        } else if (["CLOSED"].includes(session.state)) {
             console.log("session.state == CLOSED");
             session.state = "STARTING";
             session.status = 'notLogged';
@@ -34,7 +34,7 @@ module.exports = class Sessions {
             console.log("session.state: " + session.state);
         }
         return session;
-    }//start
+    }
 
     static async addSesssion(sessionName) {
         const newSession = {
@@ -48,12 +48,11 @@ module.exports = class Sessions {
         Sessions.sessions.push(newSession);
         console.log("newSession.state: " + newSession.state);
 
-        //setup session
         newSession.client = Sessions.initSession(sessionName);
         Sessions.setup(sessionName);
 
         return newSession;
-    }//addSession
+    }
 
     static async initSession(sessionName) {
         const session = Sessions.getSession(sessionName);
@@ -89,7 +88,7 @@ module.exports = class Sessions {
                     '--enable-features=NetworkService',
                     '--disable-setuid-sandbox',
                     '--no-sandbox',
-                    // Extras
+
                     '--disable-webgl',
                     '--disable-threaded-animation',
                     '--disable-threaded-scrolling',
@@ -106,12 +105,12 @@ module.exports = class Sessions {
                     '--disable-accelerated-video-decode',
                 ],
                 refreshQR: 15000,
-                autoClose: 60 * 60 * 24 * 365, //never
+                autoClose: 60 * 60 * 24 * 365,
                 disableSpins: true
             }
         );
         return client;
-    }//initSession
+    }
 
     static async setup(sessionName) {
         const session = Sessions.getSession(sessionName);
@@ -121,7 +120,9 @@ module.exports = class Sessions {
                 if (session.status === 'isLogged'){
                     session.state = 'CONNECTED';
                 }
+
                 console.log("session.state: " + state);
+
             });//.then((client) => Sessions.startProcess(client));
             client.onMessage((message) => {
                 if (message.body.toLowerCase() === 'oi' || message.body.toLowerCase() in ['boa tarde', 'bom dia', 'boa noite']) {
@@ -130,11 +131,11 @@ module.exports = class Sessions {
                 }
             });
         });
-    }//setup
+    }
 
     static async closeSession(sessionName) {
         const session = Sessions.getSession(sessionName);
-        if (session) { //só adiciona se não existir
+        if (session) {
             if (session.state !== "CLOSED") {
                 if (session.client)
                     await session.client.then(async client => {
@@ -154,7 +155,7 @@ module.exports = class Sessions {
         } else {
             return { result: "error", message: "NOTFOUND" };
         }
-    }//close
+    }
 
     static getSession(sessionName) {
         let foundSession = false;
@@ -166,7 +167,7 @@ module.exports = class Sessions {
                 }
             });
         return foundSession;
-    }//getSession
+    }
 
     static getSessions() {
         if (Sessions.sessions) {
@@ -174,21 +175,20 @@ module.exports = class Sessions {
         } else {
             return [];
         }
-    }//getSessions
+    }
 
     static async getQrcode(sessionName) {
         const session = Sessions.getSession(sessionName);
         if (session) {
             //if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)) {
             if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)) {
-                //restart session
                 await Sessions.closeSession(sessionName);
                 await Sessions.start(sessionName);
                 return { result: "error", message: session.state };
             } else if (["CLOSED"].includes(session.state)) {
                 await Sessions.start(sessionName);
                 return { result: "error", message: session.state };
-            } else { //CONNECTED
+            } else {
                 if (session.status !== 'isLogged') {
                     return { result: "success", message: session.state, qrcode: session.qrcode };
                 } else {

@@ -39,7 +39,7 @@ app.use((req, res, next) => {
   next();
 });
 
- */
+*/
 
 const sessionChecker = (req, res, next) => {
   if (req.session.user && req.cookies.user_sid) {
@@ -55,6 +55,7 @@ app.get('/', sessionChecker, (req, res) => {
 
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname+'/templates/index.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname+'/templates/register.html')));
+app.get('/testing', (req, res) => res.sendFile(path.join(__dirname+'/templates/testing.html')));
 
 app.use('/api', routes);
 

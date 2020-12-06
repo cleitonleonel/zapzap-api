@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="author" content="">
-	<title>Login</title>
+	<title>Testar</title>
 
 	<link rel="apple-touch-icon" type="image/png" href="" />
 	<meta name="apple-mobile-web-app-title" content="ZapZap-api">
@@ -17,6 +17,7 @@
 	<link rel='stylesheet' href='/css/bootstrap.min.css'>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="/controllers/notify.js"></script>
+
 
 
 <style>
@@ -77,7 +78,7 @@ form{
 }
 .form__input:focus{
 	border-bottom-color: #008080;
-	box-shadow: 0 0 5px rgba(0,80,80,.4); 
+	box-shadow: 0 0 5px rgba(0,80,80,.4);
 	border-radius: 4px;
 }
 .btn{
@@ -95,6 +96,7 @@ form{
 	background-color: #008080;
 	color:#fff;
 }
+
 #notifications {
     cursor: pointer;
     position: fixed;
@@ -112,8 +114,8 @@ form{
   window.console = window.console || function(t) {};
 </script>
 
-  
-  
+
+
   <script>
   if (document.location.search.match(/type=embed/gi)) {
     window.parent.postMessage("resize", "*");
@@ -134,26 +136,25 @@ form{
 			<div class="col-md-8 col-xs-12 col-sm-12 login_form ">
 				<div class="container-fluid">
 					<div class="row">
-						<h2>Entrar</h2>
+						<h2>Testar envio de mensagem</h2>
 					</div>
 					<div class="row">
 						<form control="" class="form-group">
 							<div class="row">
-								<label for="username"></label><input type="text" name="username" id="username" class="form__input" placeholder="Usuário" required="required">
+								<label for="number"></label><input type="text" name="number" id="number" class="form__input" placeholder="Digite um número de contato" value="55" required="required">
 							</div>
 							<div class="row">
-								<!-- <span class="fa fa-lock"></span> -->
-								<label for="password"></label><input type="password" name="password" id="password" class="form__input" placeholder="Senha" required="required">
+                <label for="message"></label><textarea type="text" name="message" id="message" class="form__input" placeholder="Digite uma mensagem"></textarea>
 							</div>
 							<div class="row">
-								<input type="checkbox" name="remember_me" id="remember_me" class="">
-								<label for="remember_me">Lembrar!</label>
-							</div>
-							<div class="row">
-								<input onclick="login()" value="Enviar" class="btn">
+								<input onclick="send()" value="Testar" class="btn">
 							</div>
 						</form>
 					</div>
+					<div class="row">
+            <div id="send_message"></div>
+					</div>
+          <br>
 					<div class="row">
 						<p>Ainda não tem uma conta? <a href="/register">Registre-se aqui!</a></p>
 					</div>
@@ -167,30 +168,32 @@ form{
 	</div>
 </body>
 <script>
-	function login() {
-		$.ajaxSettings.traditional = true;
+  function send() {
+    let number = $('#number').val();
+    let message = $('#message').val();
+    let key = window.localStorage.getItem('session_key');
+    let host = window.location.host;
+    link_send = 'Envie mensagens com esse link: ' + host + '/api/sendText/?sessionName=' + key + '&number=DDD + NÚMERO DE CONTATO&text=SUA MESSAGEM';
+    $("#send_message").text(link_send);
 
-    let username = $('#username').val();
-    let password = $('#password').val();
-
-		if (username !== "" && password !== "") {
+		if (number !== "") {
       let payload = {
-        username: username,
-        password: password,
+        sessionName: key,
+        number: number,
+        text: message,
         //csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
       }
-
       $.ajax({
-        type: 'post',
-        url: '/api/user/login/',
+        type: 'get',
+        url: '/api/sendText/',
         contentType: "application/json; charset=utf-8",
-        data: JSON.stringify(payload),
+        data: payload,
         success: function (response) {
-          notification(response.message, null, null, 'success');
-          if (response.sucess) {
-            open_qrcode(response.key);
+          if (response.result === 'success') {
+            notification('Mensagem enviada com sucesso!!!', null, null, 'success');
           } else {
-            document.getElementById("username").focus();
+          	notification('Tente novamente em instantes...', null, null, 'warning');
+            document.getElementById("number").focus();
           }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -198,41 +201,9 @@ form{
         }
       });
     } else {
-		  document.getElementById("username").focus();
+		  document.getElementById("number").focus();
     }
-	}
-
-	function open_qrcode (key) {
-		window.localStorage.setItem('session_key', key)
-		window.location = '/api/start?sessionName=' + key;
-	}
-
-	/*
-	function sleep(ms) {
-		return new Promise(resolve => setTimeout(resolve, ms));
-	}
-
-	function start(key) {
-		alert('VOU GERAR O QRCODE COM A CHAVE DE SESSÃO: ' + key);
-		let payload = {
-			sessionName: key,
-		}
-		$.ajax({
-			type: 'get',
-			url: '/api/start/',
-			contentType: "application/json; charset=utf-8",
-			data: JSON.stringify(payload),
-		success: function(response) {
-			alert(response.message);
-		},
-    error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert("Error: " + errorThrown);
-    }
-		});
-		window.location = '/api/qrcode?sessionName=' + key + '&image=true';
-
-	}
- 		*/
+  }
 
   function notification(text, callback, close_callback, style){
     Notify(text, callback, close_callback, style);
