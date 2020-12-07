@@ -13,10 +13,11 @@
 	<link rel="shortcut icon" type="image/x-icon" href="" />
 	<link rel="mask-icon" type="" href="" color="#111" />
 	<title>ZapZap-api</title>
-	<link rel='stylesheet' href='/css/font-awesome.min.css'>
-	<link rel='stylesheet' href='/css/bootstrap.min.css'>
+	<link rel='stylesheet' href='css/font_awesome.min.css'>
+	<link rel='stylesheet' href='css/bootstrap.min.css'>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="/controllers/notify.js"></script>
+  <script src="controllers/notify.js"></script>
+
 
 
 
@@ -81,21 +82,6 @@ form{
 	box-shadow: 0 0 5px rgba(0,80,80,.4);
 	border-radius: 4px;
 }
-.btn{
-	transition: all .5s ease;
-	width: 70%;
-	border-radius: 30px;
-	color:#008080;
-	font-weight: 600;
-	background-color: #fff;
-	border: 1px solid #008080;
-	margin-top: 1.5em;
-	margin-bottom: 1em;
-}
-.btn:hover, .btn:focus{
-	background-color: #008080;
-	color:#fff;
-}
 
 #notifications {
     cursor: pointer;
@@ -108,15 +94,16 @@ form{
     margin-right: 15px;
     max-width: 300px;
 }
+
 </style>
 
-  <script>
+<script>
   window.console = window.console || function(t) {};
 </script>
 
 
 
-  <script>
+<script>
   if (document.location.search.match(/type=embed/gi)) {
     window.parent.postMessage("resize", "*");
   }
@@ -126,7 +113,6 @@ form{
 </head>
 
 <body>
-	<!-- Main Content -->
   <div id="notifications"></div>
 	<div class="container-fluid">
 		<div class="row main-content bg-success text-center">
@@ -147,7 +133,15 @@ form{
                 <label for="message"></label><textarea type="text" name="message" id="message" class="form__input" placeholder="Digite uma mensagem"></textarea>
 							</div>
 							<div class="row">
-								<input onclick="send()" value="Testar" class="btn">
+								<div class="col-lg-3">
+									<button type="button" onclick="window.location = '/'" class="btn btn-default">Voltar</button>
+								</div>
+								<div class="col-lg-6">
+									<button type="button" onclick="delete_user()" class="btn btn-warning">Remover conta</button>
+								</div>
+								<div class="col-lg-3">
+									<button type="button" onclick="send()" class="btn btn-success">Testar</button>
+								</div>
 							</div>
 						</form>
 					</div>
@@ -190,8 +184,10 @@ form{
         data: payload,
         success: function (response) {
           if (response.result === 'success') {
+						$('#message').val("");
             notification('Mensagem enviada com sucesso!!!', null, null, 'success');
           } else {
+						$('#message').val("");
           	notification('Tente novamente em instantes...', null, null, 'warning');
             document.getElementById("number").focus();
           }
@@ -208,5 +204,35 @@ form{
   function notification(text, callback, close_callback, style){
     Notify(text, callback, close_callback, style);
   }
+</script>
+<script>
+function delete_user(){
+	let key = window.localStorage.getItem('session_key');
+	let user_id = window.localStorage.getItem('user_id');
+	if (user_id) {
+		let payload = {
+			sessionName: key,
+			user_id: user_id,
+			//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+		}
+		$.ajax({
+			type: 'post',
+			url: '/api/user/delete/',
+			contentType: "application/json; charset=utf-8",
+			data: JSON.stringify(payload),
+			success: function (response) {
+				if (response.success) {
+					notification(response.message, null, null, 'success');
+				} else {
+					notification(response.message, null, null, 'warning');
+					document.getElementById("number").focus();
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				notification(errorThrown, null, null, 'danger');
+			}
+		});
+	}
+}
 </script>
 </html>

@@ -188,6 +188,7 @@ form{
         success: function (response) {
           notification(response.message, null, null, 'success');
           if (response.sucess) {
+            window.localStorage.setItem('user_id', response.user_id)
             open_qrcode(response.key);
           } else {
             document.getElementById("username").focus();

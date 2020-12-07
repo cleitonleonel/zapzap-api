@@ -53,7 +53,7 @@ router.post('/user/login', function (req, res) {
         if (!isMatch){
           return res.json({success: false, message: "Senha inválida!!!"});
         }
-        return res.json({sucess: true, message: "Login efetuado com sucesso.", key: user.session_key});
+        return res.json({sucess: true, message: "Login efetuado com sucesso.", key: user.session_key, user_id: user.id});
       });
 
       //const passwordHash = bcrypt.compare(req.body.password, user.password, function(err, res) {
@@ -81,6 +81,53 @@ router.post('/user/login', function (req, res) {
         message:"Login Success"
     })
   })*/
+})
+
+router.post('/user/delete', function (req, res) {
+
+  User.destroy({
+    where: {
+      id: req.body.user_id
+    }
+  }).then(function (deletedRecord) {
+    if(deletedRecord === 1){
+      console.log('DELETANDO SAPORRA...');
+      res.status(200).json({success: true, message:"Usuário removido com sucesso!!!"});
+    } else {
+      res.status(404).json({success: false, message:"Erro ao remover usuário."})
+    }
+  }).catch(function (error) {
+    res.status(500).json(error);
+  })
+})
+
+router.get('/database/reset', function (req, res) {
+
+  User.destroy({
+    where: {
+    }
+  }).then(function (deletedRecord) {
+    if(deletedRecord){
+      res.status(200).json({success: true, message:"Banco de dados resetado com sucesso!!!"});
+    } else {
+      res.status(404).json({success: false, message:"Erro ao resetar banco de dados."})
+    }
+  }).catch(function (error) {
+    res.status(500).json(error);
+  })
+})
+
+router.get('/database/load', function (req, res) {
+
+  User.findAll().then(function (load_data) {
+    if(load_data){
+      res.status(200).json({success: true, object: load_data, message:"Banco de dados carregado com sucesso!!!"});
+    } else {
+      res.status(404).json({success: false, message:"Erro ao carregar banco de dados."})
+    }
+  }).catch(function (error) {
+    res.status(500).json(error);
+  })
 })
 
 router.get("/start", async (req, res, next) => {
