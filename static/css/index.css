@@ -1,0 +1,266 @@
+/*
+	background-image: linear-gradient(180deg,#dddbd1,#d2dbdc);
+*/
+
+
+/*
+	ESTILOS GERAIS DA PAGINA
+*/
+
+body
+{
+	margin: 0;
+	padding: 0;
+	display: flex;
+	font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+}
+
+nav
+{
+	width: 30vw;
+	height: 100vh;
+}
+
+header
+{
+	height: 9vh;
+	display: flex;
+	padding-left: 10px;
+	padding-right: 10px;
+	align-items: center;
+	width: calc(70vw - 20px);
+	background-color: #eeeeee;
+	justify-content: space-between;
+}
+
+article
+{
+	width: 70vw;
+	height: 81.5vh;
+	background-image: url("https://twigcowork.com/wp-content/uploads/2017/08/superherobackground.jpg");
+	overflow: auto;
+}
+
+footer
+{
+	width: 70vw;
+	height: 9.5vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #eeeeee;
+}
+
+input
+{
+	color: #404040;
+}
+
+i
+{
+	color: #999999;
+}
+
+/*
+	ESTILOS REFERENTES AO MENU LATERAL
+*/
+
+#nav-menu
+{
+	height: 9vh;
+	display: flex;
+	padding-left: 10px;
+	padding-right: 10px;
+	align-items: center;
+	width: calc(30vw - 21px);
+	background-color: #eeeeee;
+	justify-content: space-between;
+	border-right: 1px solid #d9d9d9;
+}
+
+#nav-menu-profile
+{
+	width: 3vw;
+	height: 3vw;
+	border-radius: 100%;
+	background-color: black;
+}
+
+#nav-menu-options
+{
+	width: 9vw;
+	height: 3vw;
+	display: flex;
+	padding-right: 25px;
+	align-items: center;
+	justify-content: space-between;
+}
+
+#nav-search
+{
+	width: 30vw;
+	height: 8vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #fbfbfb;
+	border-bottom: 1px solid #eeeeee;
+}
+
+#nav-search-input
+{
+	width: 90%;
+	height: 65%;
+	border: none;
+	color: #eeeeee;
+	text-align: center;
+	border-radius: 100px;
+	border: 1px solid #eeeeee;
+}
+
+/*
+	ESTILOS REFERENTE A LISTA DE CONTATOS
+*/
+
+#contacts-list
+{
+	width: 100%;
+	overflow-x: auto;
+	height: 82.7vh;
+}
+
+.contact-active
+{
+	background-color: #e6e6e6;
+}
+
+#contacts-list-contact
+{
+	width: 100%;
+	display: flex;
+	height: 11vh;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid #eeeeee;
+}
+
+#contact-img
+{
+	width: 3.5vw;
+	height: 3.5vw;
+	margin-left: 15px;
+	border-radius: 100%;
+	background-color: black;
+}
+
+#contact-info
+{
+	width: 20vw;
+	max-width: 23vw;
+	line-height: 3px;
+	padding-left: 10px;
+}
+
+#contact-info :nth-child(1)
+{
+	width: 95%;
+	font-size: 17px;
+	word-wrap: break-word;
+}
+
+#contact-info :nth-child(2)
+{
+	width: 95%;
+	color: #595959;
+	font-size: 12px;
+	word-wrap: break-word;
+}
+
+#contact-visualized
+{
+	width: 4vw;
+	display: flex;
+	color: #8c8c8c;
+	font-size: 12px;
+	margin-top: -15px;
+	margin-right: 15px;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+#contacts-list::-webkit-scrollbar-track
+{
+	background-color: #ffffff;
+}
+
+#contacts-list::-webkit-scrollbar
+{
+	width: 7px;
+	background-color: #ffffff;
+}
+
+#contacts-list::-webkit-scrollbar-thumb
+{
+	width: 7px;
+	background-color: rgba(0,0,0,.2);
+}
+
+/*
+	ESTILOS REFERENTE AO HEADER DA CONVERSA ATIVA
+*/
+
+#header-profile
+{
+	width: 3vw;
+	height: 3vw;
+	display: flex;
+	border-radius: 100%;
+	background-color: black;
+}
+
+#header-profile-info
+{
+	line-height: 3px;
+	padding-left: 4vw;
+	margin-top: -1vh;
+}
+
+#header-profile-info :nth-child(1)
+{
+	font-size: 17px;
+}
+
+#header-profile-info :nth-child(2)
+{
+	width: 50vw;
+	color: #595959;
+	font-size: 12px;
+}
+
+#header-options
+{
+	width: 9vw;
+	height: 3vw;
+	display: flex;
+	padding-right: 25px;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/*
+	ESTILOS REFERENTE AO FOOTER DA CONVERSA ATIVA
+*/
+
+#footer-message-input
+{
+	width: 83%;
+	height: 65%;
+	border: none;
+	color: #eeeeee;
+	font-size: 17px;
+	margin-left: 25px;
+	margin-right: 25px;
+	padding-left: 25px;
+	border-radius: 100px;
+	border: 1px solid #d9d9d9;
+}

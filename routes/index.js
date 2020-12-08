@@ -1,5 +1,8 @@
 const { Router } = require('express');
 const Sessions = require("../sessions");
+const fs = require('fs');
+const real_path = require('path');
+
 //const bcrypt = require("bcrypt-nodejs");
 //const jwt = require('jsonwebtoken');
 //const passport = require('passport');
@@ -9,6 +12,19 @@ const Sessions = require("../sessions");
 const router = Router();
 
 const User = require('../models/user');
+
+function delete_token(path){
+  if(fs.existsSync(path)) {
+    fs.rmdirSync(path, {recursive: true})
+  }else{
+    try {
+      fs.unlinkSync(path);
+    } catch(err) {
+      console.error(err)
+    }
+  }
+
+}
 
 router.post('/user/save', function(req, res) {
   if (!req.body.username || !req.body.password) {
@@ -83,7 +99,10 @@ router.post('/user/login', function (req, res) {
   })*/
 })
 
-router.post('/user/delete', function (req, res) {
+router.post('/user/delete', async function (req, res) {
+  await Sessions.closeSession(req.body.sessionName);
+
+  delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
 
   User.destroy({
     where: {
@@ -91,7 +110,6 @@ router.post('/user/delete', function (req, res) {
     }
   }).then(function (deletedRecord) {
     if(deletedRecord === 1){
-      console.log('DELETANDO SAPORRA...');
       res.status(200).json({success: true, message:"Usuário removido com sucesso!!!"});
     } else {
       res.status(404).json({success: false, message:"Erro ao remover usuário."})
@@ -102,6 +120,7 @@ router.post('/user/delete', function (req, res) {
 })
 
 router.get('/database/reset', function (req, res) {
+  delete_token(real_path.join('./tokens'));
 
   User.destroy({
     where: {
@@ -135,7 +154,6 @@ router.get("/start", async (req, res, next) => {
   const session = await Sessions.start(req.query.sessionName);
 
   if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
-    //res.status(200).json({ result: 'success', message: session.state });
     res.redirect("../api/qrcode?sessionName=" + req.query.sessionName + '&image=true')
   } else {
     res.status(200).json({ result: 'error', message: session.state });
@@ -143,52 +161,41 @@ router.get("/start", async (req, res, next) => {
   return res.end();
 });
 
+router.get("/new_qrcode", async function (req, res, next) {
+  const session = await Sessions.getSession(req.query.sessionName);
+  if (session) {
+    if (session.status === 'qrReadSuccess'){
+      return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
+    }
+    console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
+    if (session.status === 'inChat'){
+      //res.redirect('/testing');
+      return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
+    }else if (session.status === 'notLogged') {
+      res.json({success: 'true', object: session.qrcode, message: 'Novo qrcode gerado com sucesso!!!'});
+    }
+  } else {
+    console.log('NÃO TEM SESSÃO...')
+    res.json({success: "false", message: "NOTFOUND" });
+  }
+});
+
 router.get("/qrcode", async (req, res, next) => {
   console.log("qrcode..." + req.query.sessionName);
   const session = Sessions.getSession(req.query.sessionName);
-
   if (session !== false) {
-    if (session.status !== 'isLogged') {
+    if (session.status === 'notLogged') {
       if (req.query.image) {
-        //session.qrcode = session.qrcode.replace('data:image/png;base64,', '');
-        //const imageBuffer = Buffer.from(session.qrcode, 'base64');
-
-        const html = '<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,' +
-          ' minimum-scale=0.1"><title>qrcode (264×264)</title>\t<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>\n</head>' +
-          '<body style="margin: 0;background: #ffffff;text-align-last: center; overflow: hidden;">' +
-          '<div style="padding-top: 10px;"><span style="text-align: center"><h1>Aponte a câmera do seu dispositivo e <br> leia o Qrcode que irá aparecer abaixo</h1></span></div>'+
-          '<img style="-webkit-user-select: none;margin: auto;cursor: zoom-in;padding: 20px;' +
-          'width: 300px;height: 300px;" src="'+ session.qrcode +'" width="150"' +
-          ' height="150" alt=""></body><script>\t$(document).ready(function () {\n' +
-          '\t\tsetTimeout(function () {\n' +
-          '\t\t\twindow.location.reload(1);\n' +
-          '\t\t}, 10000);\n' +
-          '\t});</script></html>';
-
-        //res.writeHead(200, {
-          //'Content-Type': 'image/png',
-          //'Content-Length': imageBuffer.length
-        //});
-        //res.end(imageBuffer);
-
-        if (session.state === 'CONNECTED' || session.status === 'inChat' || session.status === 'qrReadSuccess'){
-          res.redirect('/testing');
-        }
-
-        res.end(html);
-
-        console.log('Terminal qrcode: \n', session.ascii_qr);
-
+        res.redirect('/zapzap');
       } else {
-        res.status(200).json({ result: "success", message: session.state, qrcode: session.qrcode });
+        res.status(200).json({result: "success", message: session.state, qrcode: session.qrcode});
       }
-    } else {
-      res.status(200).json({ result: "error", message: session.state });
+    } else if (session.status === 'inChat') {
+      res.redirect('/testing');
     }
   } else {
-    res.status(200).json({ result: "error", message: "NOTFOUND" });
+    res.status(200).json({ result: "error", message: session.state });
   }
-
 });
 
 router.post("/sendText", async function sendText(req, res, next) {
@@ -197,7 +204,6 @@ router.post("/sendText", async function sendText(req, res, next) {
     req.body.number,
     req.body.text
   );
-  //console.log(req.body);
   res.json(result);
 });
 
@@ -218,6 +224,11 @@ router.post("/sendFile", async (req, res, next) => {
     req.body.fileName,
     req.body.caption
   );
+  res.json(result);
+});
+
+router.get("/messages/unread", async function (req, res, next) {
+  const result = await Sessions.unreadMessages(req.query.sessionName);
   res.json(result);
 });
 

@@ -133,13 +133,13 @@ form{
                 <label for="message"></label><textarea type="text" name="message" id="message" class="form__input" placeholder="Digite uma mensagem"></textarea>
 							</div>
 							<div class="row">
-								<div class="col-lg-3">
+								<div class="col-lg-3 col-md-4 col-sm-4 col-xs-4">
 									<button type="button" onclick="window.location = '/'" class="btn btn-default">Voltar</button>
 								</div>
-								<div class="col-lg-6">
-									<button type="button" onclick="delete_user()" class="btn btn-warning">Remover conta</button>
+								<div class="col-lg-6 col-md-4  col-sm-4 col-xs-4">
+									<button type="button" onclick="delete_user()" class="btn btn-warning">Sair</button>
 								</div>
-								<div class="col-lg-3">
+								<div class="col-lg-3 col-md-4  col-sm-4 col-xs-4">
 									<button type="button" onclick="send()" class="btn btn-success">Testar</button>
 								</div>
 							</div>
@@ -223,6 +223,7 @@ function delete_user(){
 			success: function (response) {
 				if (response.success) {
 					notification(response.message, null, null, 'success');
+					window.location = '/';
 				} else {
 					notification(response.message, null, null, 'warning');
 					document.getElementById("number").focus();

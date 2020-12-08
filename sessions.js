@@ -112,6 +112,18 @@ module.exports = class Sessions {
         return client;
     }
 
+    static async unreadMessages(sessionName) {
+        const session = Sessions.getSession(sessionName);
+        if (session){
+            const unread_messages = await session.client.then(async client => {
+                return await client.getAllUnreadMessages();
+            });
+            return unread_messages;
+        } else {
+            return {result: false, object: [], message: 'Sem mensagens não lidas.'};
+        }
+    }
+
     static async setup(sessionName) {
         const session = Sessions.getSession(sessionName);
         await session.client.then(client => {
@@ -149,7 +161,7 @@ module.exports = class Sessions {
                         console.log("client.close - session.state: " + session.state);
                     });
                 return { result: "success", message: "CLOSED" };
-            } else {//close
+            } else {
                 return { result: "success", message: session.state };
             }
         } else {
@@ -199,7 +211,7 @@ module.exports = class Sessions {
         } else {
             return { result: "error", message: "NOTFOUND" };
         }
-    } //getQrcode
+    }
 
     static async sendText(sessionName, number, text) {
         console.log(sessionName + ' ' + number + ' ' + text);
@@ -220,7 +232,7 @@ module.exports = class Sessions {
         } else {
             return { result: "error", message: "NOTFOUND" };
         }
-    }//message
+    }
 
     static async sendFile(sessionName, number, base64Data, fileName, caption) {
         const session = Sessions.getSession(sessionName);
@@ -235,7 +247,7 @@ module.exports = class Sessions {
                     fs.writeFileSync(filePath, base64Data, 'base64');
                     console.log(filePath);
                     return client.sendFile(number + '@c.us', filePath, fileName, caption);
-                });//client.then(
+                });
                 return { result: "success" };
             } else {
                 return { result: "error", message: session.state };
@@ -247,7 +259,7 @@ module.exports = class Sessions {
 }
 
 function is_connected(session) {
-    if (session.status === 'isLogged'){
+    if (session.status === 'inChat' || session.status === 'isLogged'){
         session.state = 'CONNECTED';
     }
 }

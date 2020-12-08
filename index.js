@@ -5,7 +5,7 @@ const Sessions = require("./sessions");
 const routes = require('./routes');
 const cors = require('cors');
 const path = require('path');
-//const cookieParser = require('cookie-parser');
+const cookieParser = require('cookie-parser');
 const session = require('express-session');
 require('dotenv').config();
 
@@ -18,7 +18,7 @@ app.use(express.static('static'));
 app.use(cors());
 app.use(express.json());
 
-//app.use(cookieParser());
+app.use(cookieParser());
 
 app.use(session({
   key: 'user_sid',
@@ -30,16 +30,12 @@ app.use(session({
   }
 }));
 
-/*
-
 app.use((req, res, next) => {
   if (req.cookies.user_sid && !req.session.user) {
     res.clearCookie('user_sid');
   }
   next();
 });
-
-*/
 
 const sessionChecker = (req, res, next) => {
   if (req.session.user && req.cookies.user_sid) {
@@ -56,7 +52,7 @@ app.get('/', sessionChecker, (req, res) => {
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname+'/templates/index.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname+'/templates/register.html')));
 app.get('/testing', (req, res) => res.sendFile(path.join(__dirname+'/templates/testing.html')));
-
+app.get('/zapzap', (req, res) => res.sendFile(path.join(__dirname+'/templates/zapzap.html')));
 app.use('/api', routes);
 
 if (process.env.HTTPS === 1) {
