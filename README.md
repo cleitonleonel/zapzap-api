@@ -19,7 +19,20 @@ Este projeto usa como base o [Venom-bot](https://github.com/orkestral/venom), um
 
 `npm install`
 
+`npm init -y`
+
+`npm cache verify`
+
+`npm i --save-dev`
+
+`npm i venom-bot`
+
 `cp .env-example .env`
+
+### Se houver erros ao iniciar, instalar manualmente:
+
+`sudo apt-get update`
+`sudo apt-get install -y libgbm-dev`
 
 ### Iniciando o servidor:
 
