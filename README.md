@@ -15,7 +15,7 @@ Este projeto usa como base o [Venom-bot](https://github.com/orkestral/venom), um
 
 `git clone https://github.com/cleitonleonel/zapzap-api.git`
 
-`cd myzap`
+`cd zapzap-api`
 
 `npm install`
 
