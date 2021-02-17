@@ -72,19 +72,19 @@ if (process.env.HTTPS === 1) {
 process.stdin.resume();
 
 async function exitHandler(options, exitCode) {
-    if (options.cleanup) {
-        console.log('cleanup');
-        await Sessions.getSessions().forEach(session => {
-            Sessions.closeSession(session.sessionName);
-        });
-    }
-    if (exitCode || exitCode === 0) {
-        console.log(exitCode);
-    }
+  if (options.cleanup) {
+    console.log('cleanup');
+    await Sessions.getSessions().forEach(session => {
+        Sessions.closeSession(session.sessionName);
+    });
+  }
+  if (exitCode || exitCode === 0) {
+    console.log(exitCode);
+  }
 
-    if (options.exit) {
-        process.exit();
-    }
+  if (options.exit) {
+    process.exit();
+  }
 }
 
 process.on('exit', exitHandler.bind(null, { cleanup: true }));

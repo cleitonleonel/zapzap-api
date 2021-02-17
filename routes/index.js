@@ -2,12 +2,31 @@ const { Router } = require('express');
 const Sessions = require("../sessions");
 const fs = require('fs');
 const real_path = require('path');
+const exec = require("child_process");
 
 //const bcrypt = require("bcrypt-nodejs");
 //const jwt = require('jsonwebtoken');
 //const passport = require('passport');
 //require('../configurations/password')(passport);
 //const controllers = require('../controllers');
+
+function execute(command){
+  let version = exec.execSync(command);
+  return version.toString();
+}
+
+function update_last_version(){
+  let local_version = parseInt(execute("npm list -l --depth=0 | awk -F@ '/venom-bot/ { print $2}'").split('\n')[0].split('.').join(''));
+  let remote_version = parseInt(execute("npm show venom-bot version").split('\n')[0].split('.').join(''));
+  if (local_version < remote_version) {
+    console.log('VERSÃO DESATUALIZADA');
+    console.log('ATUALIZANDO VERSÃO PARA ' + execute("npm show venom-bot version").split('\n')[0]);
+    return execute("npm update venom-bot");
+  }else{
+    console.log('VERSÃO ATUALIZADA');
+  }
+}
+update_last_version();
 
 const router = Router();
 
@@ -101,14 +120,13 @@ router.post('/user/login', function (req, res) {
 
 router.post('/user/delete', async function (req, res) {
   await Sessions.closeSession(req.body.sessionName);
-
   delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
-
   User.destroy({
     where: {
       id: req.body.user_id
     }
   }).then(function (deletedRecord) {
+    console.log(deletedRecord);
     if(deletedRecord === 1){
       res.status(200).json({success: true, message:"Usuário removido com sucesso!!!"});
     } else {
@@ -121,7 +139,6 @@ router.post('/user/delete', async function (req, res) {
 
 router.get('/database/reset', function (req, res) {
   delete_token(real_path.join('./tokens'));
-
   User.destroy({
     where: {
     }
@@ -152,7 +169,6 @@ router.get('/database/load', function (req, res) {
 router.get("/start", async (req, res, next) => {
   console.log("starting..." + req.query.sessionName);
   const session = await Sessions.start(req.query.sessionName);
-
   if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
     res.redirect("../api/qrcode?sessionName=" + req.query.sessionName + '&image=true')
   } else {
@@ -164,15 +180,17 @@ router.get("/start", async (req, res, next) => {
 router.get("/new_qrcode", async function (req, res, next) {
   const session = await Sessions.getSession(req.query.sessionName);
   if (session) {
+
+    console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
+
     if (session.status === 'qrReadSuccess'){
       return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
     }
-    console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
-    if (session.status === 'inChat'){
+    if (session.status === 'isLogged' || session.status === 'inChat'){
       //res.redirect('/testing');
       return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
-    }else if (session.status === 'notLogged') {
-      res.json({success: 'true', object: session.qrcode, message: 'Novo qrcode gerado com sucesso!!!'});
+    }else if (session.status === 'notLogged' && session.state !== 'STARTING') {
+      res.json({success: 'true', object: session.qrcode, message: 'Novo qrcode gerado com sucesso!!!', is_active: false});
     }
   } else {
     console.log('NÃO TEM SESSÃO...')
@@ -190,7 +208,7 @@ router.get("/qrcode", async (req, res, next) => {
       } else {
         res.status(200).json({result: "success", message: session.state, qrcode: session.qrcode});
       }
-    } else if (session.status === 'inChat') {
+    } else if (session.status === 'inChat' || session.status === 'isLogged') {
       res.redirect('/testing');
     }
   } else {

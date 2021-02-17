@@ -112,6 +112,18 @@ module.exports = class Sessions {
         return client;
     }
 
+    static async deleteToken(sessionName) {
+        const session = Sessions.getSession(sessionName);
+        if (session){
+            const delete_token = await session.client.then(async client => {
+                return await client.getSessionTokenBrowser();
+            });
+            return delete_token;
+        } else {
+            return {result: false, object: [], message: 'Nenhuma sessão encontrada, sem tokens ativos.'};
+        }
+    }
+
     static async unreadMessages(sessionName) {
         const session = Sessions.getSession(sessionName);
         if (session){
@@ -223,6 +235,7 @@ module.exports = class Sessions {
 
             if (session.state === "CONNECTED") {
                 let resultSendText = await session.client.then(async client => {
+                    await client.sendSeen(number + '@c.us');
                     return await client.sendText(number + '@c.us', text);
                 });
                 return { result: "success" }
