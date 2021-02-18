@@ -3,6 +3,7 @@ const Sessions = require("../sessions");
 const fs = require('fs');
 const real_path = require('path');
 const exec = require("child_process");
+const os = require ('os');
 
 //const bcrypt = require("bcrypt-nodejs");
 //const jwt = require('jsonwebtoken');
@@ -19,14 +20,25 @@ function update_last_version(){
   let local_version = parseInt(execute("npm list -l --depth=0 | awk -F@ '/venom-bot/ { print $2}'").split('\n')[0].split('.').join(''));
   let remote_version = parseInt(execute("npm show venom-bot version").split('\n')[0].split('.').join(''));
   if (local_version < remote_version) {
-    console.log('VERSÃO DESATUALIZADA');
-    console.log('ATUALIZANDO VERSÃO PARA ' + execute("npm show venom-bot version").split('\n')[0]);
+    console.log('VERSÃO DESATUALIZADA.');
+    console.log('ATUALIZANDO VERSÃO PARA ' + execute("npm show venom-bot version").split('\n')[0] + '.');
     return execute("npm update venom-bot");
   }else{
-    console.log('VERSÃO ATUALIZADA');
+    console.log('JÁ ESTÁ COM A ÚLTIMA VERSÃO.');
   }
 }
-update_last_version();
+
+let platform = os.platform();
+
+if (platform === 'linux') {
+    console.log("you are on a Linux os");
+    update_last_version();
+}else if(platform === 'win32'){
+    console.log("you are on a Windows os")
+}else{
+    console.log("unknown os")
+}
+
 
 const router = Router();
 
@@ -154,7 +166,6 @@ router.get('/database/reset', function (req, res) {
 })
 
 router.get('/database/load', function (req, res) {
-
   User.findAll().then(function (load_data) {
     if(load_data){
       res.status(200).json({success: true, object: load_data, message:"Banco de dados carregado com sucesso!!!"});
@@ -169,7 +180,10 @@ router.get('/database/load', function (req, res) {
 router.get("/start", async (req, res, next) => {
   console.log("starting..." + req.query.sessionName);
   const session = await Sessions.start(req.query.sessionName);
-  if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
+  if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)){
+    delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
+  }
+  else if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
     res.redirect("../api/qrcode?sessionName=" + req.query.sessionName + '&image=true')
   } else {
     res.status(200).json({ result: 'error', message: session.state });
