@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="author" content="">
+	<title>Testar</title>
+
+	<link rel="apple-touch-icon" type="image/png" href="" />
+	<meta name="apple-mobile-web-app-title" content="ZapZap-api">
+	<link rel="shortcut icon" type="image/x-icon" href="" />
+	<link rel="mask-icon" type="" href="" color="#111" />
+	<title>ZapZap-api</title>
+	<link rel='stylesheet' href='css/font_awesome.min.css'>
+	<link rel='stylesheet' href='css/bootstrap.min.css'>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="controllers/notify.js"></script>
+
+
+
+
+<style>
+.main-content{
+	width: 50%;
+	border-radius: 20px;
+	box-shadow: 0 5px 5px rgba(0,0,0,.4);
+	margin: 5em auto;
+	display: flex;
+}
+.company__info{
+	background-color: #008080;
+	border-top-left-radius: 20px;
+	border-bottom-left-radius: 20px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	color: #fff;
+}
+.fa-android{
+	font-size:3em;
+}
+@media screen and (max-width: 640px) {
+	.main-content{width: 90%;}
+	.company__info{
+		display: none;
+	}
+	.login_form{
+		border-top-left-radius:20px;
+		border-bottom-left-radius:20px;
+	}
+}
+@media screen and (min-width: 642px) and (max-width:800px){
+	.main-content{width: 70%;}
+}
+.row > h2{
+	color:#008080;
+}
+.login_form{
+	background-color: #fff;
+	border-top-right-radius:20px;
+	border-bottom-right-radius:20px;
+	border-top:1px solid #ccc;
+	border-right:1px solid #ccc;
+}
+form{
+	padding: 0 2em;
+}
+.form__input{
+	width: 100%;
+	border:0px solid transparent;
+	border-radius: 0;
+	border-bottom: 1px solid #aaa;
+	padding: 1em .5em .5em 2em;
+	outline:none;
+	margin:1.5em auto;
+	transition: all .5s ease;
+}
+.form__input:focus{
+	border-bottom-color: #008080;
+	box-shadow: 0 0 5px rgba(0,80,80,.4);
+	border-radius: 4px;
+}
+
+#notifications {
+    cursor: pointer;
+    position: fixed;
+    padding-top: 10px;
+    right: 0px;
+    z-index: 9999;
+    /*bottom: 0px;*/
+    margin-bottom: 22px;
+    margin-right: 15px;
+    max-width: 300px;
+}
+
+</style>
+
+<script>
+  window.console = window.console || function(t) {};
+</script>
+
+
+
+<script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+
+
+</head>
+
+<body>
+  <div id="notifications"></div>
+	<div class="container-fluid">
+		<div class="row main-content bg-success text-center">
+			<div class="col-md-4 text-center company__info">
+				<span class="company__logo"><img style="width: 100%;" src="/media/zapzap-api.png" alt=""></span>
+			</div>
+			<div class="col-md-8 col-xs-12 col-sm-12 login_form ">
+				<div class="container-fluid">
+					<div class="row">
+						<h2>Envio massivo de mensagens</h2>
+					</div>
+          <div>
+            <input type="file" onchange="read(this)" />
+          </div>
+          <hr>
+          <div style="overflow:auto; height: 150px; background-color: ghostwhite;" id="output">
+
+          </div>
+					<div class="row">
+						<form control="" class="form-group">
+							<!--<div class="row">
+								<label for="number"></label>
+                <input type="text" name="number" id="number" class="form__input" placeholder="Digite um número de contato" value="55" required="required">
+              </div>-->
+							<div class="row">
+                <label for="message"></label>
+                <textarea type="text" name="message" id="message" class="form__input" placeholder="Digite uma mensagem"></textarea>
+							</div>
+							<div class="row">
+								<div class="col-lg-3 col-md-4 col-sm-4 col-xs-4">
+									<button type="button" onclick="window.location = '/'" class="btn btn-default">Voltar</button>
+								</div>
+								<div class="col-lg-6 col-md-4  col-sm-4 col-xs-4">
+									<button type="button" onclick="delete_user()" class="btn btn-warning">Sair</button>
+								</div>
+								<div class="col-lg-3 col-md-4  col-sm-4 col-xs-4">
+									<button type="button" onclick="send()" class="btn btn-success">Testar</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<div class="row">
+            <div id="send_message"></div>
+					</div>
+          <br>
+					<div class="row">
+						<p>Ainda não tem uma conta? <a href="/register">Registre-se aqui!</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container-fluid text-center footer">
+		<p>Criado com &hearts; por <a href="https://github.com/cleitonleonel">Cleiton Leonel Creton</a></p>
+	</div>
+</body>
+<script>
+function delete_user(){
+	let key = window.localStorage.getItem('session_key');
+	let user_id = window.localStorage.getItem('user_id');
+	if (user_id) {
+		let payload = {
+			sessionName: key,
+			user_id: user_id,
+			//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+		}
+		$.ajax({
+			type: 'post',
+			url: '/api/user/delete/',
+			contentType: "application/json; charset=utf-8",
+			data: JSON.stringify(payload),
+			success: function (response) {
+				if (response.success) {
+					notification(response.message, null, null, 'success');
+					window.location = '/';
+				} else {
+					notification(response.message, null, null, 'warning');
+					document.getElementById("number").focus();
+				}
+			},
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				notification(errorThrown, null, null, 'danger');
+			}
+		});
+	}
+}
+</script>
+
+<script>
+  const reader = new FileReader()
+	let employee_data = [];
+  let thisArray = [];
+  let checkbox = true;
+
+  function read(input) {
+    const csv = input.files[0]
+    reader.readAsText(csv)
+  }
+
+  reader.onload = function (e) {
+    Upload(e);
+  }
+
+  function Upload(data) {
+  	let scope = this;
+    const str = data.target.result.replace('\n\n', '');
+    scope.employee_data = str.split(/\r?\n|\r\n/);
+    scope.thisArray = JSON.parse(JSON.stringify(scope.employee_data));
+    //scope.thisArray.splice(0, 1);
+    let table_data = '<table class="table table-bordered table-striped" style="text-align: left">';
+
+    for (let count = 0; count < scope.employee_data.length; count++) {
+      const cell_data = scope.employee_data[count].split(",");
+
+			table_data += '<tr>';
+
+      for (let cell_count = 0; cell_count < cell_data.length; cell_count++) {
+        if (count === 0) {
+          table_data += '<th>' + cell_data[cell_count] + '</th>';
+        }
+      	else if (!cell_data[cell_count]){
+      		table_data += '<td onclick="select(' + count + ')"><input type="checkbox" class="checkbox" id="checkedbox" checked="checked"/></td>';
+				}
+        else {
+          table_data += '<td>' + cell_data[cell_count] + '</td>';
+        }
+      }
+      table_data += '</tr>';
+    }
+    table_data += '</table>';
+
+    console.log(table_data);
+
+    $('#output').html(table_data);
+  }
+</script>
+<script>
+  function select(index) {
+  	let scope = this;
+		scope.checkbox = !scope.checkbox;
+  	let value = scope.employee_data[index];
+		if (scope.thisArray.length >= index){
+			let number = scope.thisArray.indexOf(value);
+			if (number > -1) {
+				scope.thisArray.splice(number, 1);
+			}else{
+				scope.thisArray.push(scope.employee_data[index]);
+			}
+		}
+  }
+</script>
+
+<script>
+	function get_numbers(data){
+		let new_data = [];
+		for (let count = 0; count < data.length; count++) {
+			new_data.push(data[count].split(',')[2]);
+		}
+		return new_data;
+	}
+
+  function send() {
+		let number = null;
+    let message = $('#message').val();
+    this.thisArray.splice(0, 1)
+    let result_list = get_numbers(this.thisArray);
+    let key = window.localStorage.getItem('session_key');
+    let host = window.location.host;
+    //link_send = 'Envie mensagens com esse link: ' + host + '/api/sendText/?sessionName=' + key + '&number=DDD + NÚMERO DE CONTATO&text=SUA MESSAGEM';
+    //$("#send_message").text(link_send);
+
+		if (number !== "") {
+      let payload = {
+        sessionName: key,
+        numbers: result_list,
+        text: message,
+        //csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+      }
+      $.ajax({
+        type: 'post',
+        url: '/api/send_list/',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(payload),
+        success: function (response) {
+          if (response.result === 'success') {
+						$('#message').val("");
+            notification('Mensagem enviada com sucesso!!!', null, null, 'success');
+          } else {
+						$('#message').val("");
+          	notification('Tente novamente em instantes...', null, null, 'warning');
+            //document.getElementById("number").focus();
+          }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+          notification(errorThrown, null, null, 'danger');
+        }
+      });
+    } else {
+		  document.getElementById("number").focus();
+    }
+  }
+
+  function notification(text, callback, close_callback, style){
+    Notify(text, callback, close_callback, style);
+  }
+</script>
+</html>

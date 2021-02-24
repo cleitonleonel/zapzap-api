@@ -204,7 +204,6 @@ module.exports = class Sessions {
     static async getQrcode(sessionName) {
         const session = Sessions.getSession(sessionName);
         if (session) {
-            //if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)) {
             if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)) {
                 await Sessions.closeSession(sessionName);
                 await Sessions.start(sessionName);
@@ -268,7 +267,7 @@ module.exports = class Sessions {
         } else {
             return { result: "error", message: "NOTFOUND" };
         }
-    }//message
+    }
 }
 
 function is_connected(session) {

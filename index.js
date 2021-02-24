@@ -52,6 +52,7 @@ app.get('/', sessionChecker, (req, res) => {
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname+'/templates/index.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname+'/templates/register.html')));
 app.get('/testing', (req, res) => res.sendFile(path.join(__dirname+'/templates/testing.html')));
+app.get('/sendlist', (req, res) => res.sendFile(path.join(__dirname+'/templates/send_list.html')));
 app.get('/zapzap', (req, res) => res.sendFile(path.join(__dirname+'/templates/zapzap.html')));
 app.use('/api', routes);
 

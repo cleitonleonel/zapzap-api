@@ -11,6 +11,10 @@ const os = require ('os');
 //require('../configurations/password')(passport);
 //const controllers = require('../controllers');
 
+function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
+}
+
 function execute(command){
   let version = exec.execSync(command);
   return version.toString();
@@ -236,6 +240,26 @@ router.post("/sendText", async function sendText(req, res, next) {
     req.body.number,
     req.body.text
   );
+  res.json(result);
+});
+
+router.post("/send_list", async function sendText(req, res, next) {
+  let list_req = req.body.numbers
+  let number = null;
+  let result = null;
+  for ( let i = 0; i < list_req.length; i++ ) {
+    number = '55' + list_req[i];
+
+    console.log('ENVIANDO...' + number);
+
+    result = await Sessions.sendText(
+      req.body.sessionName,
+      number,
+      req.body.text
+    );
+
+    await sleep(10000);
+  }
   res.json(result);
 });
 
