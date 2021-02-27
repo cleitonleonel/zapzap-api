@@ -147,7 +147,11 @@ router.post('/user/login', function (req, res) {
 
 router.post('/user/delete', async function (req, res) {
   await Sessions.closeSession(req.body.sessionName);
-  delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
+  try{
+      delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
+  }catch (e) {
+    //console.log(e);
+  }
   User.destroy({
     where: {
       id: req.body.user_id
@@ -165,7 +169,11 @@ router.post('/user/delete', async function (req, res) {
 })
 
 router.get('/database/reset', function (req, res) {
-  delete_token(real_path.join('./tokens'));
+  try{
+    delete_token(real_path.join('./tokens'));
+  }catch (e) {
+    //console.log(e);
+  }
   User.destroy({
     where: {
     }
