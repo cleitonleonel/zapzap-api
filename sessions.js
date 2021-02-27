@@ -177,6 +177,7 @@ module.exports = class Sessions {
                 return { result: "success", message: session.state };
             }
         } else {
+            console.log("NÃO TEM SESSÃO...")
             return { result: "error", message: "NOTFOUND" };
         }
     }
@@ -186,8 +187,10 @@ module.exports = class Sessions {
         if (Sessions.sessions)
             Sessions.sessions.forEach(session => {
                 //console.log('OLHA AI A SESSÃO: ' + JSON.stringify(session));
+                console.log(sessionName + ' ' + session.name);
                 if (sessionName === session.name) {
                     foundSession = session;
+                    return foundSession;
                 }
             });
         return foundSession;

@@ -26,7 +26,9 @@ function update_last_version(){
   if (local_version < remote_version) {
     console.log('VERSÃO DESATUALIZADA.');
     console.log('ATUALIZANDO VERSÃO PARA ' + execute("npm show venom-bot version").split('\n')[0] + '.');
-    return execute("npm update venom-bot");
+    //return execute("npm update venom-bot");
+    execute("npm install venom-bot@" + remote_version);
+    execute("npm fund");
   }else{
     console.log('JÁ ESTÁ COM A ÚLTIMA VERSÃO.');
   }
@@ -97,6 +99,15 @@ router.post('/user/save', function(req, res) {
 router.post('/user/login', function (req, res) {
   async function check_user() {
     const user = await User.findOne({where: {username: req.body.username}});
+    let path = real_path.join('./tokens/' + user.session_key + '.data.json')
+    let is_logged = false;
+    if (user) {
+      if (fs.existsSync(path)) {
+        is_logged = true;
+        await Sessions.start(req.query.sessionName);
+      }
+    }
+
     if (!user) {
       return res.json({success: false, message: "Usuário não existe!"});
     } else {
@@ -104,7 +115,7 @@ router.post('/user/login', function (req, res) {
         if (!isMatch){
           return res.json({success: false, message: "Senha inválida!!!"});
         }
-        return res.json({sucess: true, message: "Login efetuado com sucesso.", key: user.session_key, user_id: user.id});
+        return res.json({sucess: true, message: "Login efetuado com sucesso.", key: user.session_key, user_id: user.id, is_logged: is_logged});
       });
 
       //const passwordHash = bcrypt.compare(req.body.password, user.password, function(err, res) {
@@ -269,6 +280,9 @@ router.get("/sendText", async (req, res, next) => {
     req.query.number,
     req.query.text
   );
+
+  console.log(result);
+
   res.json(result);
 });
 

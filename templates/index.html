@@ -189,7 +189,14 @@ form{
           notification(response.message, null, null, 'success');
           if (response.sucess) {
             window.localStorage.setItem('user_id', response.user_id)
-            open_qrcode(response.key);
+
+						if (response.is_logged){
+							window.localStorage.setItem('session_key', response.key)
+							window.location = '/testing';
+						}else{
+							open_qrcode(response.key);
+						}
+
           } else {
             document.getElementById("username").focus();
           }

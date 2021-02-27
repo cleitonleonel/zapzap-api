@@ -137,7 +137,7 @@ form{
 									<button type="button" onclick="window.location = '/'" class="btn btn-default">Voltar</button>
 								</div>
 								<div class="col-lg-6 col-md-4  col-sm-4 col-xs-4">
-									<button type="button" onclick="delete_user()" class="btn btn-warning">Sair</button>
+									<button type="button" onclick="logout()" class="btn btn-warning">Sair</button>
 								</div>
 								<div class="col-lg-3 col-md-4  col-sm-4 col-xs-4">
 									<button type="button" onclick="send()" class="btn btn-success">Testar</button>
@@ -151,6 +151,7 @@ form{
           <br>
 					<div class="row">
 						<p>Ainda não tem uma conta? <a href="/register">Registre-se aqui!</a></p>
+						<p style="cursor: pointer"><a onclick="delete_user()">Remover Conta</a></p>
 					</div>
 				</div>
 			</div>
@@ -167,7 +168,7 @@ form{
     let message = $('#message').val();
     let key = window.localStorage.getItem('session_key');
     let host = window.location.host;
-    link_send = 'Envie mensagens com esse link: ' + host + '/api/sendText/?sessionName=' + key + '&number=DDD + NÚMERO DE CONTATO&text=SUA MESSAGEM';
+    let link_send = 'Envie mensagens com esse link: ' + host + '/api/sendText/?sessionName=' + key + '&number=DDD + NÚMERO DE CONTATO&text=SUA MESSAGEM';
     $("#send_message").text(link_send);
 
 		if (number !== "") {
@@ -206,6 +207,38 @@ form{
   }
 </script>
 <script>
+function logout() {
+	window.localStorage.setItem('user_id', '')
+	window.localStorage.setItem('session_key', '')
+	window.location = '/';
+}
+
+function logout1(){
+	let key = window.localStorage.getItem('session_key');
+	let payload = {
+		sessionName: key,
+		//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+	}
+	$.ajax({
+		type: 'get',
+		url: '/api/close',
+		contentType: "application/json; charset=utf-8",
+		data: payload,
+		success: function (response) {
+			alert(JSON.stringify(response));
+			if (response.result === 'success') {
+				notification(response.message, null, null, 'success');
+				window.location = '/';
+			} else if(response.result === 'error'){
+				notification(response.message, null, null, 'warning');
+				document.getElementById("number").focus();
+			}
+		},
+		error: function (XMLHttpRequest, textStatus, errorThrown) {
+			notification(errorThrown, null, null, 'danger');
+		}
+	});
+}
 function delete_user(){
 	let key = window.localStorage.getItem('session_key');
 	let user_id = window.localStorage.getItem('user_id');
