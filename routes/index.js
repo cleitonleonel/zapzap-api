@@ -26,9 +26,9 @@ function update_last_version(){
   if (local_version < remote_version) {
     console.log('VERSÃO DESATUALIZADA.');
     console.log('ATUALIZANDO VERSÃO PARA ' + execute("npm show venom-bot version").split('\n')[0] + '.');
-    //return execute("npm update venom-bot");
-    execute("npm install venom-bot@" + remote_version);
-    execute("npm fund");
+    return execute("npm update venom-bot");
+    //execute("npm install venom-bot@" + remote_version);
+    //execute("npm fund");
   }else{
     console.log('JÁ ESTÁ COM A ÚLTIMA VERSÃO.');
   }
@@ -60,7 +60,6 @@ function delete_token(path){
       console.error(err)
     }
   }
-
 }
 
 router.post('/user/save', function(req, res) {
@@ -99,50 +98,25 @@ router.post('/user/save', function(req, res) {
 router.post('/user/login', function (req, res) {
   async function check_user() {
     const user = await User.findOne({where: {username: req.body.username}});
-    let path = real_path.join('./tokens/' + user.session_key + '.data.json')
     let is_logged = false;
     if (user) {
+      let path = real_path.join('./tokens/' + user.session_key + '.data.json');
       if (fs.existsSync(path)) {
-        is_logged = true;
-        await Sessions.start(req.query.sessionName);
+        is_logged = 'logged';
+      }else{
+        is_logged = 'awaiting';
       }
-    }
-
-    if (!user) {
-      return res.json({success: false, message: "Usuário não existe!"});
-    } else {
       User.comparePassword(req.body.password, user, (err, isMatch) =>{
         if (!isMatch){
           return res.json({success: false, message: "Senha inválida!!!"});
         }
         return res.json({sucess: true, message: "Login efetuado com sucesso.", key: user.session_key, user_id: user.id, is_logged: is_logged});
       });
-
-      //const passwordHash = bcrypt.compare(req.body.password, user.password, function(err, res) {
-        //if(res) {
-          //console.log('Your password mached with database hash password');
-        //} else {
-          //console.log('Your password not mached.');
-        //}
-      //});
-
-      //console.log(passwordHash + '  ' + user.password)
-      //if (passwordHash === user.password) {
-        //res.send('You are logged in!');
-      //} else {
-        //console.log('incorrect password');
-      //}
+    }else if(!user) {
+      return res.json({success: false, message: "Usuário não existe!"});
     }
   }
-
   check_user().then(r => {});
-
-  /*user.generateToken((err, user)=>{
-    if(err) return res.status(400).json({error: err});
-    res.cookie("x-auth", user.token).status(200).json({
-        message:"Login Success"
-    })
-  })*/
 })
 
 router.post('/user/delete', async function (req, res) {
@@ -201,25 +175,23 @@ router.get('/database/load', function (req, res) {
 })
 
 router.get("/start", async (req, res, next) => {
-  console.log("starting..." + req.query.sessionName);
+  //console.log("STARTING..." + req.query.sessionName);
   const session = await Sessions.start(req.query.sessionName);
   if (["UNPAIRED", "UNPAIRED_IDLE"].includes(session.state)){
     delete_token(real_path.join('./tokens/' + req.body.sessionName + '.data.json'));
   }
-  else if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
-    res.redirect("../api/qrcode?sessionName=" + req.query.sessionName + '&image=true')
-  } else {
-    res.status(200).json({ result: 'error', message: session.state });
-  }
-  return res.end();
+  //else if (["CONNECTED", "QRCODE", "STARTING"].includes(session.state)) {
+    //res.redirect("../api/qrcode?sessionName=" + req.query.sessionName + '&image=true')
+  //} else {
+    //res.status(200).json({ result: 'error', message: session.state });
+  //}
+  return res.json({success: 'true', object: session.qrcode, message: 'Novo qrcode gerado com sucesso!!!', is_active: false});;
 });
 
 router.get("/new_qrcode", async function (req, res, next) {
   const session = await Sessions.getSession(req.query.sessionName);
   if (session) {
-
-    console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
-
+    //console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
     if (session.status === 'qrReadSuccess'){
       return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
     }
@@ -230,9 +202,17 @@ router.get("/new_qrcode", async function (req, res, next) {
       res.json({success: 'true', object: session.qrcode, message: 'Novo qrcode gerado com sucesso!!!', is_active: false});
     }
   } else {
-    console.log('NÃO TEM SESSÃO...')
+    //console.log('NÃO TEM SESSÃO...')
     res.json({success: "false", message: "NOTFOUND" });
   }
+});
+
+router.get("/status", async function (req, res, next) {
+  const session = await Sessions.getSession(req.query.sessionName);
+  if (session.status){
+    return res.json({success: 'true', object: session.status, message: session.status});
+  }
+  return res.json({success: 'false', object: [], message: 'NOT FOUND'});
 });
 
 router.get("/qrcode", async (req, res, next) => {
@@ -240,9 +220,7 @@ router.get("/qrcode", async (req, res, next) => {
   const session = Sessions.getSession(req.query.sessionName);
   if (session !== false) {
     if (session.status === 'notLogged') {
-      if (req.query.image) {
-        res.redirect('/zapzap');
-      } else {
+      if (!req.query.image) {
         res.status(200).json({result: "success", message: session.state, qrcode: session.qrcode});
       }
     } else if (session.status === 'inChat' || session.status === 'isLogged') {
@@ -254,44 +232,84 @@ router.get("/qrcode", async (req, res, next) => {
 });
 
 router.post("/sendText", async function sendText(req, res, next) {
-  const result = await Sessions.sendText(
-    req.body.sessionName,
-    req.body.number,
-    req.body.text
-  );
-  res.json(result);
+  const session = Sessions.getSession(req.body.sessionName);
+  let result = {};
+  let mobile_status = null;
+  let path = real_path.join('./tokens/' + req.body.sessionName + '.data.json');
+  //console.log(session.mobile_status);
+
+  if (session.mobile_status !== 'DESCONNECTED_MOBILE'){
+    result = await Sessions.sendText(
+      req.body.sessionName,
+      req.body.number,
+      req.body.text
+    );
+    res.json(result);
+  } else {
+    if (fs.existsSync(path)) {
+      mobile_status = session.mobile_status;
+    }else{
+      mobile_status = 'NOT_SESSION';
+    }
+    result['mobile_status'] = mobile_status;
+    res.json(result);
+  }
 });
 
 router.post("/send_list", async function sendText(req, res, next) {
+  const session = Sessions.getSession(req.query.sessionName);
   let list_req = req.body.numbers
   let number = null;
   let result = null;
-  for ( let i = 0; i < list_req.length; i++ ) {
-    number = '55' + list_req[i];
+  let mobile_status = null;
+  let path = real_path.join('./tokens/' + req.query.sessionName + '.data.json');
 
-    console.log('ENVIANDO...' + number);
-
-    result = await Sessions.sendText(
-      req.body.sessionName,
-      number,
-      req.body.text
-    );
-
-    await sleep(10000);
+  if (session.mobile_status !== 'DESCONNECTED_MOBILE'){
+    for ( let i = 0; i < list_req.length; i++ ) {
+      number = '55' + list_req[i];
+      console.log('ENVIANDO...' + number);
+      result = await Sessions.sendText(
+        req.body.sessionName,
+        number,
+        req.body.text
+      );
+      await sleep(10000);
+    }
+    res.json(result);
+  } else {
+    if (fs.existsSync(path)) {
+      mobile_status = session.mobile_status;
+    }else{
+      mobile_status = 'NOT_SESSION';
+    }
+    result['mobile_status'] = mobile_status;
+    res.json(result);
   }
-  res.json(result);
 });
 
 router.get("/sendText", async (req, res, next) => {
-  const result = await Sessions.sendText(
-    req.query.sessionName,
-    req.query.number,
-    req.query.text
-  );
+  const session = Sessions.getSession(req.query.sessionName);
+  let result = {};
+  let mobile_status = null;
+  let path = real_path.join('./tokens/' + req.query.sessionName + '.data.json');
+  //console.log(session.mobile_status);
 
-  console.log(result);
-
-  res.json(result);
+  if (session.mobile_status !== 'DESCONNECTED_MOBILE'){
+    result = await Sessions.sendText(
+      req.query.sessionName,
+      req.query.number,
+      req.query.text
+    );
+    res.json(result);
+  } else {
+    if (fs.existsSync(path)) {
+      mobile_status = session.mobile_status;
+    }else{
+      mobile_status = 'NOT_SESSION';
+    }
+    result['mobile_status'] = mobile_status;
+    res.json(result);
+  }
 });
 
 router.post("/sendFile", async (req, res, next) => {

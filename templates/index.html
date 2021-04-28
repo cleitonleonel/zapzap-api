@@ -186,23 +186,24 @@ form{
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify(payload),
         success: function (response) {
-          notification(response.message, null, null, 'success');
           if (response.sucess) {
+						start(response.key);
+          	notification(response.message, null, null, 'success');
             window.localStorage.setItem('user_id', response.user_id)
-
-						if (response.is_logged){
+						if (response.is_logged === 'logged'){
 							window.localStorage.setItem('session_key', response.key)
 							window.location = '/testing';
-						}else{
+						}else if(response.is_logged === 'awaiting'){
 							open_qrcode(response.key);
 						}
 
           } else {
+          	notification(response.message, null, null, 'warning');
             document.getElementById("username").focus();
           }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-          notification(errorThrown, null, null, 'danger');
+          notification(errorThrown, null, null, 'warning');
         }
       });
     } else {
@@ -212,16 +213,17 @@ form{
 
 	function open_qrcode (key) {
 		window.localStorage.setItem('session_key', key)
-		window.location = '/api/start?sessionName=' + key;
+		start(key);
+		window.location = '/zapzap';
 	}
 
 	/*
 	function sleep(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
+	*/
 
 	function start(key) {
-		alert('VOU GERAR O QRCODE COM A CHAVE DE SESSÃO: ' + key);
 		let payload = {
 			sessionName: key,
 		}
@@ -229,18 +231,15 @@ form{
 			type: 'get',
 			url: '/api/start/',
 			contentType: "application/json; charset=utf-8",
-			data: JSON.stringify(payload),
+			data: payload,
 		success: function(response) {
-			alert(response.message);
+			notification(response.message, null, null, 'success');
 		},
     error: function(XMLHttpRequest, textStatus, errorThrown) {
-        alert("Error: " + errorThrown);
+        notification(errorThrown, null, null, 'warning');
     }
 		});
-		window.location = '/api/qrcode?sessionName=' + key + '&image=true';
-
 	}
- 		*/
 
   function notification(text, callback, close_callback, style){
     Notify(text, callback, close_callback, style);

@@ -6,6 +6,7 @@ const path = require('path');
 const venom = require('venom-bot');
 //const { json } = require('express');
 //const { Session } = require('inspector');
+const mime = require('mime-types');
 const sleep = require('system-sleep');
 const app = require("./index");
 
@@ -24,11 +25,14 @@ module.exports = class Sessions {
             session.state = "STARTING";
             session.status = 'notLogged';
             session.client = Sessions.initSession(sessionName);
-            Sessions.setup(sessionName);
+            await Sessions.setup(sessionName);
         } else if (["CONFLICT", "UNPAIRED", "UNLAUNCHED"].includes(session.state)) {
             console.log("client.useHere()");
             session.client.then(client => {
-                client.useHere();
+                // force whatsapp take over
+                if ('CONFLICT'.includes(state)) client.useHere();
+                // detect disconnect on whatsapp
+                if ('UNPAIRED'.includes(state)) console.log('logout');
             });
         } else {
             console.log("session.state: " + session.state);
@@ -42,6 +46,7 @@ module.exports = class Sessions {
             qrcode: false,
             ascii_qr: false,
             client: false,
+            mobile_status: 'AWAITING',
             status: 'notLogged',
             state: 'STARTING'
         };
@@ -49,7 +54,7 @@ module.exports = class Sessions {
         console.log("newSession.state: " + newSession.state);
 
         newSession.client = Sessions.initSession(sessionName);
-        Sessions.setup(sessionName);
+        await Sessions.setup(sessionName);
 
         return newSession;
     }
@@ -67,6 +72,9 @@ module.exports = class Sessions {
             (statusFind) => {
                 session.status = statusFind;
                 console.log("session.status: " + session.status);
+                if (session.status === 'qrReadSuccess'){
+                    session['mobile_status'] = 'CONNECTED_MOBILE';
+                }
             },
             {
                 headless: true,
@@ -88,7 +96,6 @@ module.exports = class Sessions {
                     '--enable-features=NetworkService',
                     '--disable-setuid-sandbox',
                     '--no-sandbox',
-
                     '--disable-webgl',
                     '--disable-threaded-animation',
                     '--disable-threaded-scrolling',
@@ -115,10 +122,9 @@ module.exports = class Sessions {
     static async deleteToken(sessionName) {
         const session = Sessions.getSession(sessionName);
         if (session){
-            const delete_token = await session.client.then(async client => {
+            await session.client.then(async client => {
                 return await client.getSessionTokenBrowser();
             });
-            return delete_token;
         } else {
             return {result: false, object: [], message: 'Nenhuma sessão encontrada, sem tokens ativos.'};
         }
@@ -127,10 +133,9 @@ module.exports = class Sessions {
     static async unreadMessages(sessionName) {
         const session = Sessions.getSession(sessionName);
         if (session){
-            const unread_messages = await session.client.then(async client => {
+            await session.client.then(async client => {
                 return await client.getAllUnreadMessages();
             });
-            return unread_messages;
         } else {
             return {result: false, object: [], message: 'Sem mensagens não lidas.'};
         }
@@ -138,20 +143,41 @@ module.exports = class Sessions {
 
     static async setup(sessionName) {
         const session = Sessions.getSession(sessionName);
+
+        console.log('OLHA AÍ A SESSÃO: ' + JSON.stringify(session));
+
         await session.client.then(client => {
             client.onStateChange(state => {
                 session.state = state;
-                if (session.status === 'isLogged'){
+                if (session.status === 'isLogged') {
                     session.state = 'CONNECTED';
+                    session['mobile_status'] = 'CONNECTED_MOBILE';
                 }
-
                 console.log("session.state: " + state);
-
+                // force whatsapp take over
+                if ('CONFLICT'.includes(state)) client.useHere();
+                // detect disconnect on whatsapp
+                if ('UNPAIRED'.includes(state)) console.log('logout');
+                if ('desconnectedMobile'.includes(session.status)) {
+                    mobile_desconnected(session);
+                }
             });//.then((client) => Sessions.startProcess(client));
-            client.onMessage((message) => {
-                if (message.body.toLowerCase() === 'oi' || message.body.toLowerCase() in ['boa tarde', 'bom dia', 'boa noite']) {
-                    sleep(30000);
-                    client.sendText(message.from, 'Bem Vindo ao Venom 🕷');
+            client.onMessage( async (message) => {
+                console.log('Mensagem de: ' + message.from + ' Conteúdo: ' + message.body);
+
+                if (message.isMedia === true || message.isMMS === true) {
+                    const buffer = await client.decryptFile(message);
+                    const fileName = `some-file-name.${mime.extension(message.mimetype)}`;
+                    await fs.writeFile(fileName, buffer, (err) => {
+                        //
+                    });
+                }
+                if (check_existence(message.body.toLowerCase())) {
+                    const response_list = ["hummm", "aiai", "é mesmo???", "OK!", "Maio", "Junho", "kkkk", "Hoje não...", "Desculpa aê..."];
+                    const randint = Math.floor(Math.random() * response_list.length);
+                    sleep(3000);
+                    await client.sendText(message.from, response_list[randint]);
+                    //client.sendText(message.from, 'Bem Vindo ao Venom 🕷');
                 }
             });
         });
@@ -277,4 +303,15 @@ function is_connected(session) {
     if (session.status === 'inChat' || session.status === 'isLogged'){
         session.state = 'CONNECTED';
     }
+}
+
+function mobile_desconnected(session) {
+    session.mobile_status = 'DESCONNECTED_MOBILE';
+    console.log(session.mobile_status);
+}
+
+function check_existence(phrase) {
+    let data_list = ["o", "e", "a", "boa tarde", "bom dia", "boa noite"];
+    let rx = new RegExp(data_list.join('|'));
+    return rx.test(phrase);
 }

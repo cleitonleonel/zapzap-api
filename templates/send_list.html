@@ -298,6 +298,10 @@ function delete_user(){
 </script>
 
 <script>
+	function start_function() {
+		setTimeout(function(){ window.location = '/' }, 3000);
+	}
+
 	function get_numbers(data){
 		let new_data = [];
 		for (let count = 0; count < data.length; count++) {
@@ -332,6 +336,11 @@ function delete_user(){
           if (response.result === 'success') {
 						$('#message').val("");
             notification('Mensagem enviada com sucesso!!!', null, null, 'success');
+					} else if (response.mobile_status === 'DESCONNECTED_MOBILE') {
+          	notification('Desconectado pelo dispositivo móvel', null, null, 'danger');
+						start_function();
+					} else if (response.mobile_status === 'NOT_SESSION') {
+          	window.location = '/zapzap';
           } else {
 						$('#message').val("");
           	notification('Tente novamente em instantes...', null, null, 'warning');

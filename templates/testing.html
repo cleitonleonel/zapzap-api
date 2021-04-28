@@ -163,6 +163,10 @@ form{
 	</div>
 </body>
 <script>
+	function start_function() {
+		setTimeout(function(){ window.location = '/' }, 3000);
+	}
+
   function send() {
     let number = $('#number').val();
     let message = $('#message').val();
@@ -186,7 +190,12 @@ form{
         success: function (response) {
           if (response.result === 'success') {
 						$('#message').val("");
-            notification('Mensagem enviada com sucesso!!!', null, null, 'success');
+						notification('Mensagem enviada com sucesso!!!', null, null, 'success');
+					} else if (response.mobile_status === 'DESCONNECTED_MOBILE') {
+						notification('Desconectado pelo dispositivo móvel', null, null, 'danger');
+						start_function();
+					} else if (response.mobile_status === 'NOT_SESSION') {
+          	window.location = '/zapzap';
           } else {
 						$('#message').val("");
           	notification('Tente novamente em instantes...', null, null, 'warning');
@@ -239,6 +248,7 @@ function logout1(){
 		}
 	});
 }
+
 function delete_user(){
 	let key = window.localStorage.getItem('session_key');
 	let user_id = window.localStorage.getItem('user_id');

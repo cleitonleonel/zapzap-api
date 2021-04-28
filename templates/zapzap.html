@@ -240,9 +240,16 @@
   let key = window.localStorage.getItem('session_key');
   $('#qrcode').html('<button onclick="get_qrcode(key)" style="cursor: pointer;"><span><img alt="Click me!" style="display: block; width: 60px" src="/media/reload.png"/>Clique aqui!</span></buttom>');
 
+  let interval_1 = 20000;
+  let interval_2 = 2000;
+
+  window.setInterval(function(){
+    get_status(key);
+  }, interval_2);
+
   window.setInterval(function(){
     get_qrcode(key);
-  }, 20000);
+  }, interval_1);
 
   function get_qrcode(key) {
     let payload = {
@@ -262,6 +269,33 @@
             window.location = '/testing';
           } else {
             $('#qrcode').html('<img alt="Scan me!" style="display: block;" src="'+ response.object +'">');
+          }
+        }
+      },
+      error: function (XMLHttpRequest, textStatus, errorThrown) {
+        //notification(errorThrown, null, null, 'danger');
+      }
+    });
+  }
+
+  function get_status(key) {
+    let payload = {
+      sessionName: key,
+      //csrfmiddlewaretoken: $("[name=csrfmiddlewaretoken]").val(),
+      //$('input[name=csrfmiddlewaretoken]').val()
+    }
+
+    $.ajax({
+      type: 'get',
+      url: '/api/status/',
+      contentType: "application/json; charset=utf-8",
+      data: payload,
+      success: function (response) {
+        if (response.success) {
+          if (response.object === 'qrReadSuccess'){
+            window.location = '/testing';
+            clearTimeout(interval_1);
+            clearTimeout(interval_2);
           }
         }
       },
