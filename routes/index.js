@@ -191,7 +191,7 @@ router.get("/start", async (req, res, next) => {
 router.get("/new_qrcode", async function (req, res, next) {
   const session = await Sessions.getSession(req.query.sessionName);
   if (session) {
-    //console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
+    console.log('OLHA AI O STATUS: ' + session.status + ' E OLHA O STATE: ' + session.state);
     if (session.status === 'qrReadSuccess'){
       return res.json({success: 'true', object: false, message: 'Já está logado!!!', is_active: true});
     }

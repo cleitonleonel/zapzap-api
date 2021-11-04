@@ -170,33 +170,32 @@ form{
 	function login() {
 		$.ajaxSettings.traditional = true;
 
-    let username = $('#username').val();
-    let password = $('#password').val();
+    	let username = $('#username').val();
+    	let password = $('#password').val();
 
 		if (username !== "" && password !== "") {
-      let payload = {
-        username: username,
-        password: password,
-        //csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
-      }
+		  let payload = {
+			username: username,
+			password: password,
+			//csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+		  }
 
-      $.ajax({
+      	$.ajax({
         type: 'post',
         url: '/api/user/login/',
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify(payload),
         success: function (response) {
           if (response.sucess) {
-						start(response.key);
+			start(response.key);
           	notification(response.message, null, null, 'success');
             window.localStorage.setItem('user_id', response.user_id)
-						if (response.is_logged === 'logged'){
-							window.localStorage.setItem('session_key', response.key)
-							window.location = '/testing';
-						}else if(response.is_logged === 'awaiting'){
-							open_qrcode(response.key);
-						}
-
+			if (response.is_logged === 'logged'){
+				window.localStorage.setItem('session_key', response.key)
+				window.location = '/testing';
+			}else if(response.is_logged === 'awaiting'){
+				open_qrcode(response.key);
+			}
           } else {
           	notification(response.message, null, null, 'warning');
             document.getElementById("username").focus();
@@ -206,9 +205,9 @@ form{
           notification(errorThrown, null, null, 'warning');
         }
       });
-    } else {
+		} else {
 		  document.getElementById("username").focus();
-    }
+		}
 	}
 
 	function open_qrcode (key) {

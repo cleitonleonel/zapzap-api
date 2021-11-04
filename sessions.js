@@ -77,6 +77,9 @@ module.exports = class Sessions {
                 }
             },
             {
+                createPathFileToken: true,
+                folderNameToken: 'tokens',
+                mkdirFolderToken: '',
                 headless: true,
                 devtools: false,
                 useChrome: false,
@@ -114,6 +117,12 @@ module.exports = class Sessions {
                 refreshQR: 15000,
                 autoClose: 60 * 60 * 24 * 365,
                 disableSpins: true
+            },
+            {
+                WABrowserId: '',
+                WASecretBundle: '',
+                WAToken1: '',
+                WAToken2: '',
             }
         );
         return client;
@@ -171,9 +180,8 @@ module.exports = class Sessions {
                     await fs.writeFile(fileName, buffer, (err) => {
                         //
                     });
-                }
-                if (check_existence(message.body.toLowerCase())) {
-                    const response_list = ["hummm", "aiai", "é mesmo???", "OK!", "Maio", "Junho", "kkkk", "Hoje não...", "Desculpa aê..."];
+                }else if (check_existence(message.body.toLowerCase())) {
+                    const response_list = ["Só pra constar sou um BOT em fase de testes, ok!!! 🕷", "hummm", "aiai", "é mesmo???", "OK!", "Show!!!", "Que massa muleque...", "kkkk", "Hoje não...", "Desculpa aê...", "putss", "pode isso Arnaldo???"];
                     const randint = Math.floor(Math.random() * response_list.length);
                     sleep(3000);
                     await client.sendText(message.from, response_list[randint]);
@@ -261,7 +269,7 @@ module.exports = class Sessions {
 
             is_connected(session);
 
-            if (session.state === "CONNECTED") {
+            if (session.state === "CONNECTED") {'~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  nnnnnnnnnnnnnnnnn'
                 let resultSendText = await session.client.then(async client => {
                     await client.sendSeen(number + '@c.us');
                     return await client.sendText(number + '@c.us', text);
@@ -300,7 +308,7 @@ module.exports = class Sessions {
 }
 
 function is_connected(session) {
-    if (session.status === 'inChat' || session.status === 'isLogged'){
+    if (session.state === 'CONNECTED' || session.status === 'inChat' || session.status === 'isLogged' || session.status === 'chatsAvailable') {
         session.state = 'CONNECTED';
     }
 }
